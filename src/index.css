@@ -1,0 +1,337 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 250 250 250;
+    --foreground: 44 44 44;
+
+    --card: 255 255 255;
+    --card-foreground: 44 44 44;
+
+    --popover: 255 255 255;
+    --popover-foreground: 44 44 44;
+
+    --primary: 44 44 44;
+    --primary-foreground: 248 248 248;
+
+    --secondary: 245 245 245;
+    --secondary-foreground: 44 44 44;
+
+    --muted: 245 245 245;
+    --muted-foreground: 102 102 102;
+
+    --accent: 245 245 245;
+    --accent-foreground: 44 44 44;
+
+    --destructive: 239 68 68;
+    --destructive-foreground: 248 248 248;
+
+    --border: 229 229 229;
+    --input: 229 229 229;
+    --ring: 44 44 44;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 248 248 248;
+    --sidebar-foreground: 44 44 44;
+    --sidebar-primary: 44 44 44;
+    --sidebar-primary-foreground: 248 248 248;
+    --sidebar-accent: 245 245 245;
+    --sidebar-accent-foreground: 44 44 44;
+    --sidebar-border: 229 229 229;
+    --sidebar-ring: 44 44 44;
+  }
+
+  .dark {
+    --background: 15 15 15;
+    --foreground: 248 248 248;
+
+    --card: 15 15 15;
+    --card-foreground: 248 248 248;
+
+    --popover: 15 15 15;
+    --popover-foreground: 248 248 248;
+
+    --primary: 248 248 248;
+    --primary-foreground: 44 44 44;
+
+    --secondary: 38 38 38;
+    --secondary-foreground: 248 248 248;
+
+    --muted: 38 38 38;
+    --muted-foreground: 153 153 153;
+
+    --accent: 38 38 38;
+    --accent-foreground: 248 248 248;
+
+    --destructive: 127 29 29;
+    --destructive-foreground: 248 248 248;
+
+    --border: 38 38 38;
+    --input: 38 38 38;
+    --ring: 153 153 153;
+    --sidebar-background: 15 15 15;
+    --sidebar-foreground: 248 248 248;
+    --sidebar-primary: 248 248 248;
+    --sidebar-primary-foreground: 15 15 15;
+    --sidebar-accent: 38 38 38;
+    --sidebar-accent-foreground: 248 248 248;
+    --sidebar-border: 38 38 38;
+    --sidebar-ring: 153 153 153;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-gradient-to-b from-valley-silk via-gray-50 to-gray-100 text-valley-stone;
+    font-family: 'Noto Serif SC', serif;
+    min-height: 100vh;
+  }
+
+  .valley-input {
+    @apply bg-transparent border-0 border-b border-valley-whisper focus:border-valley-echo outline-none text-center text-xl tracking-wider;
+    font-family: 'Noto Serif SC', serif;
+    transition: all 0.6s ease;
+  }
+
+  .valley-input:focus {
+    @apply border-valley-stone;
+  }
+
+  .valley-input::placeholder {
+    @apply text-valley-whisper;
+    font-weight: 300;
+  }
+
+  .peak-word {
+    @apply font-serif-sc text-3xl font-light tracking-widest;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .valley-quote {
+    @apply font-serif-sc text-sm font-light text-valley-echo leading-relaxed;
+    font-style: italic;
+  }
+
+  .cliff-shadow {
+    background: linear-gradient(135deg, rgba(44,44,44,0.05) 0%, rgba(102,102,102,0.02) 100%);
+  }
+
+  /* 思考状态 - 三颗微光圆点 */
+  .thinking-dot {
+    @apply w-2 h-2 rounded-full;
+    background-color: #b8860b; /* 冷金色 - 深金黄 */
+    opacity: 0.3;
+    transform: scale(0.8);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* 脉动动画 - 依次亮起然后一同暗下 */
+  .thinking-dot-1 {
+    animation: thinkingPulse 1.2s infinite;
+  }
+
+  .thinking-dot-2 {
+    animation: thinkingPulse 1.2s infinite 0.2s;
+  }
+
+  .thinking-dot-3 {
+    animation: thinkingPulse 1.2s infinite 0.4s;
+  }
+
+  @keyframes thinkingPulse {
+    0% {
+      opacity: 0.3;
+      transform: scale(0.8);
+    }
+    15% {
+      opacity: 0.9;
+      transform: scale(1.1);
+      box-shadow: 0 0 8px rgba(184, 134, 11, 0.4);
+    }
+    30% {
+      opacity: 1;
+      transform: scale(1.2);
+      box-shadow: 0 0 12px rgba(184, 134, 11, 0.6);
+    }
+    45% {
+      opacity: 0.9;
+      transform: scale(1.1);
+      box-shadow: 0 0 8px rgba(184, 134, 11, 0.4);
+    }
+    60% {
+      opacity: 0.3;
+      transform: scale(0.8);
+    }
+    100% {
+      opacity: 0.3;
+      transform: scale(0.8);
+    }
+  }
+
+  /* 延迟渐入动画 - 用于提示文字 */
+  @keyframes fadeInDelayed {
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    100% {
+      opacity: 0.6;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-delayed {
+    animation: fadeInDelayed 0.8s ease-out 2s both;
+  }
+
+  /* 诗意交互文字 - 谷声既息，再抛一词 */
+  .valley-prompt {
+    @apply cursor-pointer select-none;
+    opacity: 0;
+    animation: valleyPromptFadeIn 600ms ease-out forwards;
+    margin-top: 3rem;
+    line-height: 1.8;
+  }
+
+  .valley-prompt-text {
+    @apply text-xs font-light tracking-widest;
+    color: #b8860b; /* 冷金色 */
+    opacity: 0.6;
+    transition: all 300ms ease-out;
+    display: inline-block;
+    letter-spacing: 0.2em;
+  }
+
+  .valley-prompt:hover .valley-prompt-text {
+    letter-spacing: 0.25em;
+    opacity: 0.8;
+    text-shadow: 0 1px 0 rgba(184, 134, 11, 0.2);
+  }
+
+  /* 点击解体动画 */
+  .valley-prompt.disintegrating .valley-prompt-text {
+    animation: textDisintegration 350ms ease-in forwards;
+  }
+
+  /* 字符碎片动画 */
+  .valley-char-fragment {
+    @apply text-xs font-light inline-block;
+    color: #b8860b;
+    opacity: 0.6;
+    letter-spacing: 0.2em;
+    animation: charDisintegration 350ms ease-in forwards;
+  }
+
+  .valley-char-fragment:nth-child(2n) {
+    animation-name: charDisintegrationLeft;
+  }
+
+  .valley-char-fragment:nth-child(3n) {
+    animation-name: charDisintegrationRight;
+  }
+
+  .valley-char-fragment:nth-child(5n) {
+    animation-name: charDisintegrationCenter;
+  }
+
+  @keyframes valleyPromptFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes textDisintegration {
+    0% {
+      opacity: 0.6;
+      transform: translateY(0) scale(1);
+    }
+    30% {
+      opacity: 0.4;
+      transform: translateY(20px) scale(0.98);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(150px) scale(0.8);
+    }
+  }
+
+  /* 字符碎片下坠动画 - 中央轨迹 */
+  @keyframes charDisintegration {
+    0% {
+      opacity: 0.6;
+      transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+    }
+    30% {
+      opacity: 0.4;
+      transform: translateY(30px) translateX(0) rotate(5deg) scale(0.95);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(150px) translateX(0) rotate(15deg) scale(0.7);
+    }
+  }
+
+  /* 字符碎片下坠动画 - 左侧轨迹 */
+  @keyframes charDisintegrationLeft {
+    0% {
+      opacity: 0.6;
+      transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+    }
+    30% {
+      opacity: 0.4;
+      transform: translateY(25px) translateX(-15px) rotate(-8deg) scale(0.92);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(140px) translateX(-35px) rotate(-20deg) scale(0.6);
+    }
+  }
+
+  /* 字符碎片下坠动画 - 右侧轨迹 */
+  @keyframes charDisintegrationRight {
+    0% {
+      opacity: 0.6;
+      transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+    }
+    30% {
+      opacity: 0.4;
+      transform: translateY(35px) translateX(20px) rotate(12deg) scale(0.88);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(160px) translateX(45px) rotate(25deg) scale(0.5);
+    }
+  }
+
+  /* 字符碎片下坠动画 - 中心特殊轨迹 */
+  @keyframes charDisintegrationCenter {
+    0% {
+      opacity: 0.6;
+      transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+    }
+    20% {
+      opacity: 0.5;
+      transform: translateY(15px) translateX(-5px) rotate(-3deg) scale(0.98);
+    }
+    50% {
+      opacity: 0.3;
+      transform: translateY(45px) translateX(8px) rotate(8deg) scale(0.85);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(155px) translateX(15px) rotate(18deg) scale(0.65);
+    }
+  }
+}

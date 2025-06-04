@@ -92,6 +92,124 @@
     @apply bg-gradient-to-b from-valley-silk via-gray-50 to-gray-100 text-valley-stone;
     font-family: 'Noto Serif SC', serif;
     min-height: 100vh;
+    /* 修复移动端视口问题 */
+    min-height: 100svh; /* 支持新的视口单位 */
+    min-height: -webkit-fill-available; /* Safari兼容 */
+    /* 确保背景完全覆盖 */
+    background-attachment: fixed;
+  }
+
+  /* 移动端特殊处理 */
+  @supports (-webkit-touch-callout: none) {
+    body {
+      /* iOS Safari 特殊处理 */
+      min-height: -webkit-fill-available;
+      background-attachment: scroll; /* iOS上fixed会有问题 */
+    }
+  }
+
+  /* 修复移动端容器高度问题 */
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: 100svh; /* 新的视口单位，排除浏览器UI */
+    min-height: -webkit-fill-available; /* Safari回退 */
+  }
+
+  /* 确保移动端背景层次正确 */
+  @media (max-width: 768px) {
+    body {
+      /* 移动端使用简化的背景渐变，避免分层问题 */
+      background: linear-gradient(180deg, 
+        rgb(250, 248, 246) 0%,    /* valley-silk */
+        rgb(249, 250, 251) 30%,   /* gray-50 */
+        rgb(243, 244, 246) 70%,   /* gray-100 */
+        rgb(255, 255, 255) 100%   /* white */
+      );
+      background-attachment: scroll;
+      /* 确保背景覆盖整个视口 */
+      background-size: 100% 100vh;
+      background-repeat: no-repeat;
+    }
+
+    /* 移动端容器调整 */
+    .min-h-screen {
+      /* 使用动态视口高度，自动适应移动端浏览器 */
+      min-height: 100dvh; /* 动态视口高度 */
+      min-height: 100vh; /* 回退 */
+    }
+
+    /* 移动端文字大小调整 */
+    .peak-word {
+      @apply text-2xl; /* 从3xl调整为2xl */
+    }
+
+    .valley-quote {
+      @apply text-xs px-4; /* 增加左右内边距 */
+    }
+
+    .valley-input {
+      @apply text-lg; /* 从xl调整为lg */
+    }
+
+    /* 移动端交互区域优化 */
+    .valley-prompt {
+      margin-top: 2rem; /* 从3rem调整为2rem */
+      padding: 1rem; /* 增加触摸区域 */
+    }
+
+    .valley-prompt-text {
+      @apply text-sm; /* 从xs调整为sm，提高可读性 */
+    }
+  }
+
+  /* 超小屏幕设备优化 */
+  @media (max-width: 375px) {
+    .peak-word {
+      @apply text-xl;
+    }
+    
+    .valley-quote {
+      @apply text-xs px-6;
+    }
+    
+    .valley-input {
+      @apply text-base;
+    }
+  }
+
+  /* 横屏移动设备优化 */
+  @media (max-width: 768px) and (orientation: landscape) {
+    body {
+      /* 横屏时确保背景完整显示 */
+      background-size: 100% 100vw; /* 使用vw确保覆盖 */
+    }
+    
+    .min-h-screen {
+      min-height: 100vh;
+      min-height: 100svh;
+    }
+    
+    /* 横屏时调整边距 */
+    .valley-prompt {
+      margin-top: 1rem;
+    }
+  }
+
+  /* 防止移动端滚动条导致的背景问题 */
+  html {
+    overflow-x: hidden;
+  }
+
+  /* 确保所有绝对定位的背景元素在移动端正确显示 */
+  @media (max-width: 768px) {
+    .absolute.inset-0 {
+      /* 确保背景层完全覆盖 */
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      left: 0;
+      top: 0;
+    }
   }
 
   .valley-input {

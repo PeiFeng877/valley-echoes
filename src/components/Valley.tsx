@@ -86,20 +86,31 @@ const Valley: React.FC = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Background gradient representing valley walls */}
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-100 via-gray-50 to-white" />
+      {/* Background gradient representing valley walls - 优化移动端显示 */}
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-100 via-gray-50 to-white md:block hidden" />
       
-      {/* Subtle mountain silhouettes */}
-      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-valley-mist/10 to-transparent" />
-      <div className="absolute top-0 right-0 w-full h-40 bg-gradient-to-bl from-valley-stone/5 to-transparent" />
+      {/* 移动端专用背景 - 简化渐变避免分层 */}
+      <div className="absolute inset-0 md:hidden" 
+           style={{
+             background: 'linear-gradient(180deg, rgb(243, 244, 246) 0%, rgb(249, 250, 251) 50%, rgb(255, 255, 255) 100%)',
+             minHeight: '100dvh'
+           }} />
       
-      <div className="relative z-10 h-screen flex items-center justify-center">
+      {/* Subtle mountain silhouettes - 移动端优化 */}
+      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-valley-mist/10 to-transparent hidden md:block" />
+      <div className="absolute top-0 right-0 w-full h-40 bg-gradient-to-bl from-valley-stone/5 to-transparent hidden md:block" />
+      
+      {/* 移动端简化的装饰元素 */}
+      <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-gray-200/20 to-transparent md:hidden" />
+      <div className="absolute top-0 right-0 w-full h-24 bg-gradient-to-bl from-gray-300/10 to-transparent md:hidden" />
+      
+      <div className="relative z-10 h-screen flex items-center justify-center px-4 md:px-0">
         {state.mode === 'input' && (
-          <div className="w-full">
+          <div className="w-full max-w-md mx-auto">
             <WordInput onSubmit={handleWordSubmit} />
             {state.error && (
               <div className="text-center mt-8">
-                <p className="text-red-500 text-sm">{state.error}</p>
+                <p className="text-red-500 text-sm px-4">{state.error}</p>
               </div>
             )}
           </div>
@@ -134,9 +145,9 @@ const Valley: React.FC = () => {
         )}
       </div>
       
-      {/* Breathing ambient elements */}
-      <div className="absolute bottom-10 left-10 w-2 h-2 rounded-full bg-valley-whisper/30 animate-breath" />
-      <div className="absolute top-20 right-20 w-1 h-1 rounded-full bg-valley-echo/20 animate-breath" style={{ animationDelay: '2s' }} />
+      {/* Breathing ambient elements - 移动端位置优化 */}
+      <div className="absolute bottom-10 left-4 md:left-10 w-2 h-2 rounded-full bg-valley-whisper/30 animate-breath" />
+      <div className="absolute top-20 right-4 md:right-20 w-1 h-1 rounded-full bg-valley-echo/20 animate-breath" style={{ animationDelay: '2s' }} />
       
       {/* Log Viewer Component - 隐藏，保留功能 */}
       {false && <LogViewer />}

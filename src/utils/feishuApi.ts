@@ -75,17 +75,22 @@ class FeishuAPI {
       // 根据环境使用不同的API地址
       const apiUrl = import.meta.env.DEV 
         ? '/api/feishu/open-apis/auth/v3/tenant_access_token/internal'  // 开发环境使用代理
-        : 'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal';  // 生产环境直接调用
+        : '/api/feishu-auth';  // 生产环境使用Vercel API函数
+      
+      // 开发环境需要传递认证信息，生产环境由API函数从环境变量读取
+      const requestBody = import.meta.env.DEV 
+        ? JSON.stringify({
+            app_id: this.config.appId,
+            app_secret: this.config.appSecret
+          })
+        : JSON.stringify({}); // 生产环境的API函数从环境变量读取
       
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          app_id: this.config.appId,
-          app_secret: this.config.appSecret
-        })
+        body: requestBody
       });
 
       if (!response.ok) {
@@ -123,68 +128,54 @@ class FeishuAPI {
       
       console.log('📝 正在发送日志到飞书表格...', record);
 
-      // 根据环境使用不同的API地址
-      const apiUrl = import.meta.env.DEV 
-        ? `/api/feishu/open-apis/bitable/v1/apps/${this.config.appToken}/tables/${this.config.tableId}/records`  // 开发环境使用代理
-        : `https://open.feishu.cn/open-apis/bitable/v1/apps/${this.config.appToken}/tables/${this.config.tableId}/records`;  // 生产环境直接调用
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fields: record
-        })
-      });
-
-      if (!response.ok) {
-        // 详细的错误信息处理
-        const errorText = await response.text();
-        let errorDetail = '';
+      if (import.meta.env.DEV) {
+        // 开发环境：使用代理
+        const apiUrl = `/api/feishu/open-apis/bitable/v1/apps/${this.config.appToken}/tables/${this.config.tableId}/records`;
         
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorDetail = errorJson.msg || errorJson.message || '未知错误';
-        } catch {
-          errorDetail = errorText;
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fields: record
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        // 根据HTTP状态码提供具体的解决建议
-        let suggestion = '';
-        switch (response.status) {
-          case 403:
-            suggestion = `
-权限不足！请检查：
-1. 应用是否有 bitable:app:readwrite 权限
-2. 应用是否已添加到表格并有编辑权限
-3. 应用是否已发布并通过审核
-4. App Token 和 Table ID 是否正确`;
-            break;
-          case 404:
-            suggestion = `
-资源未找到！请检查：
-1. App Token 是否正确 (basc开头)
-2. Table ID 是否正确 (tbl开头)
-3. 表格是否存在且未被删除`;
-            break;
-          case 401:
-            suggestion = `
-认证失败！请检查：
-1. App ID 和 App Secret 是否正确
-2. Token 是否已过期
-3. 应用配置是否正确`;
-            break;
+        const data: CreateRecordResponse = await response.json();
+        
+        if (data.code !== 0) {
+          throw new Error(`飞书API错误 ${data.code}: ${data.msg}`);
+        }
+      } else {
+        // 生产环境：使用Vercel API函数
+        const response = await fetch('/api/feishu-records', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            appToken: this.config.appToken,
+            tableId: this.config.tableId,
+            fields: record,
+            accessToken: token
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        throw new Error(`HTTP ${response.status}: ${errorDetail}${suggestion}`);
-      }
-
-      const data: CreateRecordResponse = await response.json();
-      
-      if (data.code !== 0) {
-        throw new Error(`飞书API错误 ${data.code}: ${data.msg}`);
+        const data: CreateRecordResponse = await response.json();
+        
+        if (data.code !== 0) {
+          throw new Error(`飞书API错误 ${data.code}: ${data.msg}`);
+        }
       }
 
       console.log('✅ 日志已成功发送到飞书表格');
@@ -223,72 +214,73 @@ class FeishuAPI {
 
       console.log('📝 正在发送测试记录...', testRecord);
 
-      // 根据环境使用不同的API地址
-      const apiUrl = import.meta.env.DEV 
-        ? `/api/feishu/open-apis/bitable/v1/apps/${this.config.appToken}/tables/${this.config.tableId}/records`  // 开发环境使用代理
-        : `https://open.feishu.cn/open-apis/bitable/v1/apps/${this.config.appToken}/tables/${this.config.tableId}/records`;  // 生产环境直接调用
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fields: testRecord
-        })
-      });
-
-      console.log('📡 响应状态:', response.status, response.statusText);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ 响应内容:', errorText);
+      if (import.meta.env.DEV) {
+        // 开发环境：使用代理
+        const apiUrl = `/api/feishu/open-apis/bitable/v1/apps/${this.config.appToken}/tables/${this.config.tableId}/records`;
         
-        let errorDetail = '';
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorDetail = errorJson.msg || errorJson.message || '未知错误';
-        } catch {
-          errorDetail = errorText;
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fields: testRecord
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          return {
+            success: false,
+            message: `HTTP ${response.status}: ${errorText}`
+          };
         }
 
-        return {
-          success: false,
-          message: `HTTP ${response.status}: ${errorDetail}`
-        };
+        const data: CreateRecordResponse = await response.json();
+        
+        if (data.code !== 0) {
+          return {
+            success: false,
+            message: `飞书API错误 ${data.code}: ${data.msg}`
+          };
+        }
+      } else {
+        // 生产环境：使用Vercel API函数
+        const response = await fetch('/api/feishu-records', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            appToken: this.config.appToken,
+            tableId: this.config.tableId,
+            fields: testRecord,
+            accessToken: token
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          return {
+            success: false,
+            message: `HTTP ${response.status}: ${errorText}`
+          };
+        }
+
+        const data: CreateRecordResponse = await response.json();
+        
+        if (data.code !== 0) {
+          return {
+            success: false,
+            message: `飞书API错误 ${data.code}: ${data.msg}`
+          };
+        }
       }
 
-      // 获取并检查响应内容
-      const responseText = await response.text();
-      console.log('📄 完整响应内容:', responseText);
-
-      let data: CreateRecordResponse;
-      try {
-        data = JSON.parse(responseText);
-        console.log('📊 解析后的数据:', data);
-      } catch (parseError) {
-        console.error('❌ JSON解析失败:', parseError);
-        return {
-          success: false,
-          message: `响应解析失败: ${responseText.substring(0, 100)}...`
-        };
-      }
-      
-      if (data.code !== 0) {
-        console.error('❌ 飞书API返回错误码:', data.code, data.msg);
-        return {
-          success: false,
-          message: `飞书API错误 ${data.code}: ${data.msg}`
-        };
-      }
-
-      console.log('🎉 测试记录创建成功!');
-      console.log('📋 记录ID:', data.data?.record?.record_id);
-      
       return {
         success: true,
-        message: `飞书连接测试成功！记录ID: ${data.data?.record?.record_id || '已创建'}`
+        message: '飞书连接测试成功！'
       };
 
     } catch (error) {
@@ -301,20 +293,39 @@ class FeishuAPI {
     }
   }
 
-  // 批量发送日志（未来扩展用）
+  // 批量创建记录（用于日志批处理）
   async batchCreateRecords(records: LogRecord[]): Promise<boolean> {
-    // 飞书API支持批量创建，但需要特殊处理
-    // 这里先用循环实现，后续可以优化
-    let allSuccess = true;
+    if (!this.isEnabled()) {
+      return false;
+    }
+
+    const batchSize = 5; // 每批处理5条记录
+    const batches = [];
     
-    for (const record of records) {
-      const success = await this.createLogRecord(record);
-      if (!success) {
-        allSuccess = false;
+    for (let i = 0; i < records.length; i += batchSize) {
+      batches.push(records.slice(i, i + batchSize));
+    }
+
+    let successCount = 0;
+    
+    for (const batch of batches) {
+      const promises = batch.map(record => this.createLogRecord(record));
+      const results = await Promise.allSettled(promises);
+      
+      results.forEach(result => {
+        if (result.status === 'fulfilled' && result.value) {
+          successCount++;
+        }
+      });
+      
+      // 批次间延迟，避免频率限制
+      if (batches.indexOf(batch) < batches.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
-    
-    return allSuccess;
+
+    console.log(`📊 批量创建完成: ${successCount}/${records.length} 条记录成功`);
+    return successCount > 0;
   }
 }
 

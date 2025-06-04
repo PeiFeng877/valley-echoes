@@ -64,6 +64,12 @@ class LLMLogger {
     // 发送到飞书表格 - 开始状态
     this.sendToFeishu(log).catch(error => {
       console.warn('⚠️ 发送飞书日志失败（开始）:', error);
+      console.warn('📊 错误详情:', {
+        message: error.message,
+        stack: error.stack,
+        logId: id,
+        inputWord: inputWord
+      });
     });
 
     return id;
@@ -108,6 +114,13 @@ class LLMLogger {
     // 发送到飞书表格 - 成功状态
     this.sendToFeishu(log).catch(error => {
       console.warn('⚠️ 发送飞书日志失败（成功）:', error);
+      console.warn('📊 错误详情:', {
+        message: error.message,
+        stack: error.stack,
+        logId: id,
+        inputWord: log.inputWord,
+        responseData: { opposite, quote }
+      });
     });
 
     // 触发日志更新事件
@@ -136,6 +149,13 @@ class LLMLogger {
     // 发送到飞书表格 - 错误状态
     this.sendToFeishu(log).catch(sendError => {
       console.warn('⚠️ 发送飞书日志失败（错误）:', sendError);
+      console.warn('📊 错误详情:', {
+        sendErrorMessage: sendError.message,
+        sendErrorStack: sendError.stack,
+        originalError: error.message,
+        logId: id,
+        inputWord: log.inputWord
+      });
     });
 
     // 触发日志更新事件

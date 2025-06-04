@@ -59,7 +59,15 @@ class FeishuAPI {
 
   // 检查是否启用飞书日志
   isEnabled(): boolean {
-    return import.meta.env.VITE_ENABLE_FEISHU_LOG === 'true' && this.isConfigured();
+    const enabled = import.meta.env.VITE_ENABLE_FEISHU_LOG === 'true';
+    const configured = this.isConfigured();
+    console.log('🔍 飞书日志状态检查:', {
+      VITE_ENABLE_FEISHU_LOG: import.meta.env.VITE_ENABLE_FEISHU_LOG,
+      enabled,
+      configured,
+      finalResult: enabled && configured
+    });
+    return enabled && configured;
   }
 
   // 获取访问令牌
@@ -71,11 +79,20 @@ class FeishuAPI {
 
     try {
       console.log('🔐 正在获取飞书访问令牌...');
+      console.log('🏗️ 运行环境:', import.meta.env.DEV ? '开发环境' : '生产环境');
+      console.log('🔧 配置检查:', {
+        appId: this.config.appId ? `存在(${this.config.appId.substring(0, 8)}...)` : '缺失',
+        appSecret: this.config.appSecret ? `存在(${this.config.appSecret.substring(0, 8)}...)` : '缺失',
+        appToken: this.config.appToken ? `存在(${this.config.appToken.substring(0, 8)}...)` : '缺失',
+        tableId: this.config.tableId ? `存在(${this.config.tableId.substring(0, 8)}...)` : '缺失'
+      });
       
       // 根据环境使用不同的API地址
       const apiUrl = import.meta.env.DEV 
         ? '/api/feishu/open-apis/auth/v3/tenant_access_token/internal'  // 开发环境使用代理
         : '/api/feishu-auth';  // 生产环境使用Vercel API函数
+      
+      console.log('🔗 API地址:', apiUrl);
       
       // 开发环境需要传递认证信息，生产环境由API函数从环境变量读取
       const requestBody = import.meta.env.DEV 
@@ -85,6 +102,8 @@ class FeishuAPI {
           })
         : JSON.stringify({}); // 生产环境的API函数从环境变量读取
       
+      console.log('📦 请求体大小:', requestBody.length, '字符');
+      
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -93,11 +112,16 @@ class FeishuAPI {
         body: requestBody
       });
 
+      console.log('📥 响应状态:', response.status, response.statusText);
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('❌ HTTP请求失败:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
 
       const data: AccessTokenResponse = await response.json();
+      console.log('📄 响应数据:', { ...data, tenant_access_token: data.tenant_access_token ? '***隐藏***' : undefined });
       
       if (data.code !== 0) {
         throw new Error(`飞书API错误 ${data.code}: ${data.msg}`);
@@ -126,7 +150,9 @@ class FeishuAPI {
     try {
       const token = await this.getAccessToken();
       
-      console.log('📝 正在发送日志到飞书表格...', record);
+      console.log('📝 正在发送日志到飞书表格...');
+      console.log('🏗️ 运行环境:', import.meta.env.DEV ? '开发环境' : '生产环境');
+      console.log('📦 记录数据:', JSON.stringify(record, null, 2));
 
       if (import.meta.env.DEV) {
         // 开发环境：使用代理
@@ -154,26 +180,40 @@ class FeishuAPI {
         }
       } else {
         // 生产环境：使用Vercel API函数
+        console.log('🏭 生产环境：调用Vercel API函数创建记录...');
+        const requestPayload = {
+          appToken: this.config.appToken,
+          tableId: this.config.tableId,
+          fields: record,
+          accessToken: token
+        };
+        console.log('📤 发送到Vercel API的数据:', {
+          ...requestPayload,
+          accessToken: token ? '***隐藏***' : '缺失',
+          appToken: this.config.appToken ? `存在(${this.config.appToken.substring(0, 8)}...)` : '缺失'
+        });
+        
         const response = await fetch('/api/feishu-records', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            appToken: this.config.appToken,
-            tableId: this.config.tableId,
-            fields: record,
-            accessToken: token
-          })
+          body: JSON.stringify(requestPayload)
         });
 
+        console.log('📥 Vercel API响应状态:', response.status, response.statusText);
+
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          const errorText = await response.text();
+          console.error('❌ Vercel API调用失败:', errorText);
+          throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
         }
 
         const data: CreateRecordResponse = await response.json();
+        console.log('📄 Vercel API响应数据:', JSON.stringify(data, null, 2));
         
         if (data.code !== 0) {
+          console.error('❌ Vercel API返回业务错误:', data);
           throw new Error(`飞书API错误 ${data.code}: ${data.msg}`);
         }
       }
@@ -337,11 +377,38 @@ if (typeof window !== 'undefined') {
   (window as any).feishuAPI = {
     test: () => feishuAPI.testConnection(),
     isEnabled: () => feishuAPI.isEnabled(),
-    isConfigured: () => feishuAPI.isConfigured()
+    isConfigured: () => feishuAPI.isConfigured(),
+    // 新增调试方法
+    debug: () => {
+      console.group('🔍 飞书API调试信息');
+      console.log('🏗️ 运行环境:', import.meta.env.DEV ? '开发环境' : '生产环境');
+      console.log('🔧 配置状态:', {
+        appId: feishuAPI.isConfigured() ? '✅ 已配置' : '❌ 缺失',
+        appSecret: feishuAPI.isConfigured() ? '✅ 已配置' : '❌ 缺失',
+        appToken: feishuAPI.isConfigured() ? '✅ 已配置' : '❌ 缺失',
+        tableId: feishuAPI.isConfigured() ? '✅ 已配置' : '❌ 缺失'
+      });
+      console.log('⚙️ 启用状态:', feishuAPI.isEnabled() ? '✅ 已启用' : '❌ 未启用');
+      console.log('🌍 所有环境变量:', Object.keys(import.meta.env).filter(key => key.includes('FEISHU')));
+      console.groupEnd();
+      
+      return {
+        environment: import.meta.env.DEV ? 'development' : 'production',
+        configured: feishuAPI.isConfigured(),
+        enabled: feishuAPI.isEnabled(),
+        config: {
+          appId: !!feishuAPI['config'].appId,
+          appSecret: !!feishuAPI['config'].appSecret,
+          appToken: !!feishuAPI['config'].appToken,
+          tableId: !!feishuAPI['config'].tableId
+        }
+      };
+    }
   };
   
   console.log('🔧 飞书API工具已加载，可在控制台使用：');
   console.log('   - window.feishuAPI.test() - 测试飞书连接');
+  console.log('   - window.feishuAPI.debug() - 显示调试信息');
   console.log('   - window.feishuAPI.isEnabled() - 检查是否启用');
   console.log('   - window.feishuAPI.isConfigured() - 检查配置状态');
 } 

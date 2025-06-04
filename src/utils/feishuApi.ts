@@ -72,8 +72,12 @@ class FeishuAPI {
     try {
       console.log('🔐 正在获取飞书访问令牌...');
       
-      // 使用Vite代理路径，避免跨域问题
-      const response = await fetch('/api/feishu/open-apis/auth/v3/tenant_access_token/internal', {
+      // 根据环境使用不同的API地址
+      const apiUrl = import.meta.env.DEV 
+        ? '/api/feishu/open-apis/auth/v3/tenant_access_token/internal'  // 开发环境使用代理
+        : 'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal';  // 生产环境直接调用
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,20 +123,21 @@ class FeishuAPI {
       
       console.log('📝 正在发送日志到飞书表格...', record);
 
-      // 使用Vite代理路径，避免跨域问题
-      const response = await fetch(
-        `/api/feishu/open-apis/bitable/v1/apps/${this.config.appToken}/tables/${this.config.tableId}/records`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            fields: record
-          })
-        }
-      );
+      // 根据环境使用不同的API地址
+      const apiUrl = import.meta.env.DEV 
+        ? `/api/feishu/open-apis/bitable/v1/apps/${this.config.appToken}/tables/${this.config.tableId}/records`  // 开发环境使用代理
+        : `https://open.feishu.cn/open-apis/bitable/v1/apps/${this.config.appToken}/tables/${this.config.tableId}/records`;  // 生产环境直接调用
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fields: record
+        })
+      });
 
       if (!response.ok) {
         // 详细的错误信息处理
@@ -218,19 +223,21 @@ class FeishuAPI {
 
       console.log('📝 正在发送测试记录...', testRecord);
 
-      const response = await fetch(
-        `/api/feishu/open-apis/bitable/v1/apps/${this.config.appToken}/tables/${this.config.tableId}/records`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            fields: testRecord
-          })
-        }
-      );
+      // 根据环境使用不同的API地址
+      const apiUrl = import.meta.env.DEV 
+        ? `/api/feishu/open-apis/bitable/v1/apps/${this.config.appToken}/tables/${this.config.tableId}/records`  // 开发环境使用代理
+        : `https://open.feishu.cn/open-apis/bitable/v1/apps/${this.config.appToken}/tables/${this.config.tableId}/records`;  // 生产环境直接调用
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fields: testRecord
+        })
+      });
 
       console.log('📡 响应状态:', response.status, response.statusText);
 

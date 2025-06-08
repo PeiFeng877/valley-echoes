@@ -174,6 +174,7 @@ class LLMLogger {
         timestamp: new Date(log.timestamp).getTime(), // Unix时间戳（毫秒）
         input_word: log.inputWord,
         opposite_word: log.response?.opposite || '',
+        quote: log.response?.quote || '', // AI生成的箴言/注解
         status: this.getStatusText(log.status),
         duration_ms: log.status !== 'pending' ? log.duration : undefined,
         token_usage: log.response?.usage?.total_tokens || undefined,

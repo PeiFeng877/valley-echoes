@@ -29,6 +29,7 @@ interface LogRecord {
   timestamp: number; // Unix时间戳
   input_word: string;
   opposite_word?: string;
+  quote?: string; // AI生成的箴言/注解
   status: string;
   duration_ms?: number;
   token_usage?: number;
